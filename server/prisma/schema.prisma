@@ -16,5 +16,6 @@ model User {
   githubId   String   @unique
   username   String
   avatarUrl  String?
+  bio        String?
   createdAt  DateTime @default(now())
 }

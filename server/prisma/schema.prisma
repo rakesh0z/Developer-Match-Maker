@@ -17,5 +17,17 @@ model User {
   username   String
   avatarUrl  String?
   bio        String?
+  skills     Skill[]
   createdAt  DateTime @default(now())
+}
+model Skill {
+  id        String @id @default(uuid())
+
+  language  String
+  score     Int
+
+  userId    String
+  user      User @relation(fields:[userId], references:[id])
+
+  @@unique([userId, language])
 }

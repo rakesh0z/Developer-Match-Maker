@@ -16,6 +16,7 @@ model User {
   githubId   String   @unique
   username   String
   avatarUrl  String?
+  accessToken  String?
   bio        String?
   skills     Skill[]
   createdAt  DateTime @default(now())

@@ -1,5 +1,8 @@
 import './App.css'
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import Dashboard from './Dashboard'
+
+
 
 function Home() {
   return (
@@ -29,19 +32,7 @@ function Home() {
   )
 }
 
-function Dashboard() {
-  return (
-    <section id='center'>
-      <div>
-        <h1>Dashboard</h1>
-        <p>You are now routed to the dashboard after login.</p>
-        <Link to='/' className='counter'>
-          Back to Home
-        </Link>
-      </div>
-    </section>
-  )
-}
+
 
 function App() {
   return (
@@ -49,6 +40,7 @@ function App() {
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/dashboard' element={<Dashboard />} />
+
       </Routes>
     </BrowserRouter>
   )

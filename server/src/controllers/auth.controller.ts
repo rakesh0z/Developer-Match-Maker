@@ -54,6 +54,7 @@ export const githubCallback = async (
       return res.status(500).json({ error: "Failed to retrieve GitHub access token." });
     }
 
+
     const userResponse = await axios.get("https://api.github.com/user", {
       headers: {
         Authorization: `Bearer ${accessToken}`
@@ -69,15 +70,28 @@ export const githubCallback = async (
       update: {
         username: githubUser.login,
         avatarUrl: githubUser.avatar_url,
-        bio: githubUser.bio
+        bio: githubUser.bio,
+        accessToken: accessToken
       },
       create: {
         githubId: String(githubUser.id),
         username: githubUser.login,
         avatarUrl: githubUser.avatar_url,
-        bio: githubUser.bio
+        bio: githubUser.bio,
+        accessToken: accessToken
       }
     });
+
+    try {
+      // Auto-sync skills on login.
+      const { calculateSkillsForUser } = await import("../services/skills.service.js");
+      if (accessToken) {
+        await calculateSkillsForUser(user.id, accessToken);
+      }
+    } catch (e) {
+      // Don't block login redirect if GitHub analysis fails.
+      console.error("Failed to sync skills:", e);
+    }
 
     const jwtSecret = process.env.JWT_SECRET;
 

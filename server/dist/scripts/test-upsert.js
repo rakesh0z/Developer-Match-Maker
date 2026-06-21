@@ -1,21 +1,12 @@
-import prisma from '../src/config/prisma.js';
-async function run() {
-    try {
-        const user = await prisma.user.upsert({
-            where: { githubId: 'TEST_UPSERT' },
-            update: { username: 'test', avatarUrl: null, bio: 'test-bio' },
-            create: { githubId: 'TEST_UPSERT', username: 'test', avatarUrl: null, bio: 'test-bio' },
-        });
-        console.log('Upsert result:', user);
-    }
-    catch (err) {
-        console.error('Upsert error:');
-        console.error(err);
-    }
-    finally {
-        await prisma.$disconnect();
-        process.exit(0);
-    }
+/*
+  Neutralized script.
+  Previously used for manual Prisma upsert testing.
+
+  This script must NOT run during normal server start or skill sync.
+*/
+if (require.main === module) {
+    // eslint-disable-next-line no-console
+    console.log("test-upsert.ts has been neutralized; no DB/GitHub calls will be executed.");
 }
-run();
+export {};
 //# sourceMappingURL=test-upsert.js.map

@@ -5,6 +5,8 @@ import prisma from "./config/prisma.js";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
 import usersRoutes from "./routes/users.routes.js";
+import issuesRoutes from "./routes/issues.routes.js";
+import "./cron/syncIssues.js";
 const app = express();
 app.use(cookieParser());
 app.use(cors({
@@ -14,6 +16,7 @@ app.use(cors({
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/issues", issuesRoutes);
 app.get("/", (req, res) => {
     res.send("API Running");
 });

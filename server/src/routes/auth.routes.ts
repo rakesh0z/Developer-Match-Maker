@@ -4,7 +4,7 @@ import {
   githubCallback,
   getCurrentUser
 } from "../controllers/auth.controller.js";
-import authMiddleware from "../middleware/auth.middleware.ts";
+import authMiddleware from "../middleware/auth.middleware.js";
 
 const router = Router();
 

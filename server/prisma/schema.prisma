@@ -32,3 +32,44 @@ model Skill {
 
   @@unique([userId, language])
 }
+
+model Repository {
+  id           String  @id @default(uuid())
+
+  githubRepoId Int     @unique
+  owner        String
+  name         String
+
+  language     String?
+
+  stars        Int
+  forks        Int
+
+  issues       Issue[]
+
+  createdAt    DateTime @default(now())
+}
+
+model Issue {
+  id            String @id @default(uuid())
+
+  githubIssueId Int    @unique
+
+  title         String
+  body          String?
+
+  state         String
+
+  difficulty    String?
+
+  url            String
+
+  createdAtGithub DateTime
+  updatedAtGithub DateTime
+
+  repositoryId  String
+  repository    Repository @relation(fields: [repositoryId], references: [id])
+
+  createdAt     DateTime @default(now())
+}
+

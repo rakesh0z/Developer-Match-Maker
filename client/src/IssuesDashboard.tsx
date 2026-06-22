@@ -45,9 +45,12 @@ export default function IssuesDashboard() {
 
         const params: Record<string, string> = {};
         if (difficulty) params.difficulty = difficulty;
-        if (language) params.language = language;
+// Avoid sending a language filter when the UI is still default/empty.
+        if (language && language !== "") params.language = language;
+        
 
-        const res = await axios.get<Issue[]>("http://localhost:5000/api/issues", {
+        // Prefer live GitHub fetch so issues show even if DB sync is empty.
+        const res = await axios.get<Issue[]>("http://localhost:5000/api/issues/github", {
           params,
           withCredentials: true
         });

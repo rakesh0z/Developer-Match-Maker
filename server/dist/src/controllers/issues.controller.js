@@ -33,11 +33,12 @@ export const getIssues = async (req, res) => {
                 // Robust language filtering:
                 // - repository.language is nullable in the schema
                 // - depending on DB state, nested filters can behave unexpectedly
-                // - we explicitly require a Repository relation when filtering by language
                 ...(language
                     ? {
                         repository: {
                             is: {
+                                // DB currently may store NULL for language (sync stub).
+                                // Only filter when language is a real value.
                                 language
                             }
                         }

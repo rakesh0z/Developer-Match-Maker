@@ -1,4 +1,4 @@
-import axios from "axios";
+import { fetchIssuesCached } from "./githubCache.service.js";
 
 export type GitHubIssue = {
   id: number;
@@ -12,20 +12,7 @@ export type GitHubIssue = {
   repository_url: string;
 };
 
-export const fetchIssues = async (query: string) => {
-  const response = await axios.get(
-    "https://api.github.com/search/issues",
-    {
-      params: {
-        q: query,
-        per_page: 100
-      },
-      headers: {
-        Accept: "application/vnd.github+json"
-      }
-    }
-  );
-
-  return response.data.items as GitHubIssue[];
+export const fetchIssues = async (query: string, token?: string) => {
+  return fetchIssuesCached(query, token);
 };
 

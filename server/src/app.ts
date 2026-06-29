@@ -6,8 +6,12 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
 import usersRoutes from "./routes/users.routes.js";
 import issuesRoutes from "./routes/issues.routes.js";
+import recommendationsRoutes from "./routes/recommendations.routes.js";
+import { getRedis } from "./config/redis.js";
 
 import "./cron/syncIssues.js";
+
+getRedis();
 
 
 
@@ -26,6 +30,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/issues", issuesRoutes);
+app.use("/api/recommendations", recommendationsRoutes);
 
 
 app.get("/", (req, res) => {

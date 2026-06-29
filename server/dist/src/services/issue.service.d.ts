@@ -11,5 +11,5 @@ export type GitHubIssue = {
     }>;
     repository_url: string;
 };
-export declare const fetchIssues: (query: string) => Promise<GitHubIssue[]>;
+export declare const fetchIssues: (query: string, token?: string) => Promise<GitHubIssue[]>;
 //# sourceMappingURL=issue.service.d.ts.map

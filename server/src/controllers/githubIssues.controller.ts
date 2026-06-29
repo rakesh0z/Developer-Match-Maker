@@ -1,7 +1,7 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middleware/auth.middleware.js";
 import prisma from "../config/prisma.js";
-import axios from "axios";
+import { fetchIssuesCached, getRepoLanguageCached } from "../services/githubCache.service.js";
 
 type GitHubIssue = {
   id: number;
@@ -60,20 +60,12 @@ export const getGitHubIssues = async (req: AuthRequest, res: Response) => {
     'is:open is:issue label:"help wanted"'
   ];
 
-  const headers = {
-    Accept: "application/vnd.github+json",
-    Authorization: `Bearer ${user.accessToken}`
-  };
-
   const perPage = 50;
   const allIssues: GitHubIssue[] = [];
 
   for (const q of queries) {
-    const response = await axios.get("https://api.github.com/search/issues", {
-      params: { q, per_page: perPage },
-      headers
-    });
-    allIssues.push(...(response.data.items as GitHubIssue[]));
+    const items = await fetchIssuesCached(q, user.accessToken);
+    allIssues.push(...items.slice(0, perPage));
   }
 
   // Filter by difficulty using labels returned from search.
@@ -85,19 +77,12 @@ export const getGitHubIssues = async (req: AuthRequest, res: Response) => {
   // Filter by language using repository_url (need extra request per unique repo).
   // For performance, dedupe and cache language lookups within the request.
   if (language) {
-    const repoLanguageCache = new Map<string, string | null>();
-
-    const getRepoLanguage = async (repository_url: string) => {
-      if (repoLanguageCache.has(repository_url)) return repoLanguageCache.get(repository_url) ?? null;
-      const repoResp = await axios.get(repository_url, { headers });
-      const lang = repoResp.data?.language ?? null;
-      repoLanguageCache.set(repository_url, lang);
-      return lang;
-    };
-
     const withLang = await Promise.all(
       filtered.map(async (i) => {
-        const repoLang = await getRepoLanguage(i.repository_url);
+        const repoLang = await getRepoLanguageCached(
+          i.repository_url,
+          user.accessToken
+        );
         return { issue: i, repoLang };
       })
     );

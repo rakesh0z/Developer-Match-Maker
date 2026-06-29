@@ -1,5 +1,6 @@
 import prisma from "../config/prisma.js";
 import { calculateSkillsForUser } from "../services/skills.service.js";
+import { invalidateUserRecommendations } from "../services/recommendation.service.js";
 export const syncSkills = async (req, res) => {
     if (!req.user?.userId) {
         return res.status(401).json({ error: "Unauthorized" });
@@ -15,6 +16,7 @@ export const syncSkills = async (req, res) => {
         return res.status(400).json({ error: "Missing GitHub access token" });
     }
     await calculateSkillsForUser(user.id, user.accessToken);
+    await invalidateUserRecommendations(user.id);
     return res.json({ message: "Skills updated" });
 };
 export const getSkills = async (req, res) => {

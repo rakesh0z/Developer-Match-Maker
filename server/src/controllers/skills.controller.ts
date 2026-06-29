@@ -2,6 +2,7 @@ import type { Response } from "express";
 import prisma from "../config/prisma.js";
 
 import { calculateSkillsForUser } from "../services/skills.service.js";
+import { invalidateUserRecommendations } from "../services/recommendation.service.js";
 import type { AuthRequest } from "../middleware/auth.middleware.js";
 
 export const syncSkills = async (req: AuthRequest, res: Response) => {
@@ -23,6 +24,7 @@ export const syncSkills = async (req: AuthRequest, res: Response) => {
   }
 
   await calculateSkillsForUser(user.id, user.accessToken);
+  await invalidateUserRecommendations(user.id);
 
   return res.json({ message: "Skills updated" });
 };

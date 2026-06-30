@@ -3,11 +3,14 @@ import prisma from "../config/prisma.js";
 import jwt from "jsonwebtoken";
 export const githubLogin = (req, res) => {
     const clientId = process.env.GITHUB_CLIENT_ID;
+    const redirectUri = process.env.GITHUB_CALLBACK_URL || "http://localhost:3000/api/auth/github/callback";
     if (!clientId) {
         return res.status(500).json({ error: "Missing GitHub client ID." });
     }
     const url = `https://github.com/login/oauth/authorize` +
-        `?client_id=${clientId}`;
+        `?client_id=${clientId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&scope=user:email,read:user`;
     res.redirect(url);
 };
 export const githubCallback = async (req, res) => {
@@ -90,6 +93,13 @@ export const getCurrentUser = async (req, res) => {
     const user = await prisma.user.findUnique({
         where: {
             id: req.user.userId
+        },
+        select: {
+            id: true,
+            username: true,
+            avatarUrl: true,
+            bio: true,
+            createdAt: true
         }
     });
     res.json(user);

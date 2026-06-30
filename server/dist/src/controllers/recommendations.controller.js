@@ -9,7 +9,8 @@ export const getRecommendations = async (req, res) => {
         select: { id: true, accessToken: true }
     });
     if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        console.warn(`Recommendations requested for missing user ${req.user.userId}; returning empty list.`);
+        return res.json([]);
     }
     const rawDifficulty = req.query.difficulty;
     const rawLanguage = req.query.language;

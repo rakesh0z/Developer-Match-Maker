@@ -14,7 +14,8 @@ export const getRecommendations = async (req: AuthRequest, res: Response) => {
   });
 
   if (!user) {
-    return res.status(404).json({ error: "User not found" });
+    console.warn(`Recommendations requested for missing user ${req.user.userId}; returning empty list.`);
+    return res.json([]);
   }
 
   const rawDifficulty = req.query.difficulty as string | undefined;

@@ -11,6 +11,7 @@ interface AuthRequest extends Request {
 
 export const githubLogin = (req: Request, res: Response) => {
   const clientId = process.env.GITHUB_CLIENT_ID;
+  const redirectUri = process.env.GITHUB_CALLBACK_URL || "http://localhost:3000/api/auth/github/callback";
 
   if (!clientId) {
     return res.status(500).json({ error: "Missing GitHub client ID." });
@@ -18,7 +19,9 @@ export const githubLogin = (req: Request, res: Response) => {
 
   const url =
     `https://github.com/login/oauth/authorize` +
-    `?client_id=${clientId}`;
+    `?client_id=${clientId}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&scope=user:email,read:user`;
 
   res.redirect(url);
 };
@@ -124,6 +127,13 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
   const user = await prisma.user.findUnique({
     where: {
       id: req.user.userId
+    },
+    select: {
+      id: true,
+      username: true,
+      avatarUrl: true,
+      bio: true,
+      createdAt: true
     }
   });
 

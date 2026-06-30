@@ -1,7 +1,7 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middleware/auth.middleware.js";
 import prisma from "../config/prisma.js";
-import { fetchIssuesCached, getRepoLanguageCached } from "../services/githubCache.service.js";
+import { fetchIssuesCached, getRepoMetadataCached } from "../services/githubCache.service.js";
 
 type GitHubIssue = {
   id: number;
@@ -75,15 +75,15 @@ export const getGitHubIssues = async (req: AuthRequest, res: Response) => {
   });
 
   // Filter by language using repository_url (need extra request per unique repo).
-  // For performance, dedupe and cache language lookups within the request.
+  // For performance, dedupe and cache metadata lookups within the request.
   if (language) {
     const withLang = await Promise.all(
       filtered.map(async (i) => {
-        const repoLang = await getRepoLanguageCached(
-          i.repository_url,
-          user.accessToken
-        );
-        return { issue: i, repoLang };
+        const repoParts = i.repository_url.split("/").filter(Boolean);
+        const owner = repoParts[repoParts.length - 2] || "";
+        const name = repoParts[repoParts.length - 1] || "";
+        const metadata = await getRepoMetadataCached(owner, name, user.accessToken);
+        return { issue: i, repoLang: metadata.language };
       })
     );
 
@@ -92,26 +92,32 @@ export const getGitHubIssues = async (req: AuthRequest, res: Response) => {
       .map((x) => x.issue);
   }
 
-  const mapped = filtered.slice(0, 50).map((i) => {
-    const repoParts = i.repository_url.split("/").filter(Boolean);
-    const owner = repoParts[repoParts.length - 2] || "";
-    const name = repoParts[repoParts.length - 1] || "";
+  const mapped = await Promise.all(
+    filtered.slice(0, 50).map(async (i) => {
+      const repoParts = i.repository_url.split("/").filter(Boolean);
+      const owner = repoParts[repoParts.length - 2] || "";
+      const name = repoParts[repoParts.length - 1] || "";
+      const metadata = await getRepoMetadataCached(owner, name, user.accessToken);
 
-    return {
-      githubIssueId: i.id,
-      title: i.title,
-      body: i.body,
-      state: i.state,
-      difficulty: getDifficulty(i.labels),
-      url: i.html_url,
-      updatedAtGithub: i.updated_at,
-      repository: {
-        owner,
-        name,
-        language: language ?? null
-      }
-    };
-  });
+      return {
+        githubIssueId: i.id,
+        title: i.title,
+        body: i.body,
+        state: i.state,
+        difficulty: getDifficulty(i.labels),
+        url: i.html_url,
+        updatedAtGithub: i.updated_at,
+        labels: i.labels.map((label) => label.name),
+        repository: {
+          owner,
+          name,
+          language: metadata.language,
+          stars: metadata.stars,
+          forks: metadata.forks
+        }
+      };
+    })
+  );
 
   return res.json(mapped);
 };

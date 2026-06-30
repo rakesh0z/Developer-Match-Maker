@@ -1,5 +1,5 @@
 import prisma from "../config/prisma.js";
-import { fetchIssuesCached, getRepoLanguageCached } from "../services/githubCache.service.js";
+import { fetchIssuesCached, getRepoMetadataCached } from "../services/githubCache.service.js";
 const getDifficulty = (labels) => {
     const names = labels.map((label) => label.name.toLowerCase());
     if (names.includes("good first issue"))
@@ -50,20 +50,24 @@ export const getGitHubIssues = async (req, res) => {
         return getDifficulty(i.labels) === difficultyFilter;
     });
     // Filter by language using repository_url (need extra request per unique repo).
-    // For performance, dedupe and cache language lookups within the request.
+    // For performance, dedupe and cache metadata lookups within the request.
     if (language) {
         const withLang = await Promise.all(filtered.map(async (i) => {
-            const repoLang = await getRepoLanguageCached(i.repository_url, user.accessToken);
-            return { issue: i, repoLang };
+            const repoParts = i.repository_url.split("/").filter(Boolean);
+            const owner = repoParts[repoParts.length - 2] || "";
+            const name = repoParts[repoParts.length - 1] || "";
+            const metadata = await getRepoMetadataCached(owner, name, user.accessToken);
+            return { issue: i, repoLang: metadata.language };
         }));
         filtered = withLang
             .filter((x) => x.repoLang === language)
             .map((x) => x.issue);
     }
-    const mapped = filtered.slice(0, 50).map((i) => {
+    const mapped = await Promise.all(filtered.slice(0, 50).map(async (i) => {
         const repoParts = i.repository_url.split("/").filter(Boolean);
         const owner = repoParts[repoParts.length - 2] || "";
         const name = repoParts[repoParts.length - 1] || "";
+        const metadata = await getRepoMetadataCached(owner, name, user.accessToken);
         return {
             githubIssueId: i.id,
             title: i.title,
@@ -72,13 +76,16 @@ export const getGitHubIssues = async (req, res) => {
             difficulty: getDifficulty(i.labels),
             url: i.html_url,
             updatedAtGithub: i.updated_at,
+            labels: i.labels.map((label) => label.name),
             repository: {
                 owner,
                 name,
-                language: language ?? null
+                language: metadata.language,
+                stars: metadata.stars,
+                forks: metadata.forks
             }
         };
-    });
+    }));
     return res.json(mapped);
 };
 //# sourceMappingURL=githubIssues.controller.js.map

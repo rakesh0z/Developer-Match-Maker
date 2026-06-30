@@ -1,5 +1,5 @@
 import { Router } from "express";
-import authMiddleware from "../middleware/auth.middleware.ts";
+import authMiddleware from "../middleware/auth.middleware.js";
 import { getIssues, manualSyncIssues } from "../controllers/issues.controller.js";
 import { getGitHubIssues } from "../controllers/githubIssues.controller.js";
 
